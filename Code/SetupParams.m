@@ -8,7 +8,7 @@ gamma = 4;          % coefficient of risk aversion
 % time varying
 R_all = 1.02*ones(time_periods, 1);    % risk free interest rate. Note the final interest rate is not used.
 
-R_all = 0.98*ones(time_periods, 1);
+R_all = 0.917*ones(time_periods, 1);
 
 %% Grids
 a_grid_size = 40;               % grid for asset holding going into the following period

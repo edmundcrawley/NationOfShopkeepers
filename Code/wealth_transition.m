@@ -19,7 +19,7 @@ consumption = interp1(m_grid, c_function, wealth_grid,'linear','extrap');
 debt = interp1(m_grid, d_function, wealth_grid,'linear','extrap');
 savings = wealth_grid - consumption + debt;
 
-income_grid_size = 10;
+income_grid_size = 100;
 wealth_grid_size = length(wealth_grid);
 transition_matrix = zeros(wealth_grid_size, wealth_grid_size);
 wealth_loss = zeros(wealth_grid_size, 1);
@@ -41,6 +41,6 @@ for i=1:wealth_grid_size
             end
         end
     end
-    wealth_loss(i) = sum(max(debt(i)*risky_rate-income_grid,0))*(1-lambda);
+    wealth_loss(i) = income_grid(1)*income_grid_weights(1)*(1-lambda);  %On default costs are 1-lambda of income
 end
 

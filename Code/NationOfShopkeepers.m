@@ -16,7 +16,7 @@ for t = [time_periods-1:-1:1]
 end
 
 %% Plot some interesting graphs
-plot_policy
+%plot_policy
 
 %% Now find wealth distribution
 wealth_grid_size = 100;
@@ -36,23 +36,23 @@ initial_dist = next_dist;
 
 %% Find equilibrium interest rate
 time_periods = 10;  %convergence might be faster if we start closer to the solution
-R_max = 0.9175;
-R_min = 0.917;
+R_max = 0.929;
+R_min = 0.928;
 R = (R_max+R_min)/2;
 
 for i=1:10   %binary search for R
     c_func_it = c_function(:,1);
     m_grid_it = m_grid(:,1);
-    for j = 1:10    %first find the policy functions
+    for j = 1:20    %first find the policy functions
         [c_func_it, d_func_it, a_func_it, m_grid_it] = iterate_policy(R, beta, gamma, lambda, m_grid_it, c_func_it, a_grid);
     end
     [transition_matrix, wealth_loss] = wealth_transition(c_func_it, d_func_it, m_grid_it, R, wealth_grid, lambda);
     next_dist = initial_dist;
-    for i=1:25
+    for j=1:25
         next_dist = transition_matrix*next_dist;
     end
     bankrupcy_costs_fraction = sum(next_dist.*wealth_loss)/0.5;
-    excess_wealth = sum(next_dist.*wealth_grid)-(0.5*(1-bankrupcy_costs_fraction));
+    excess_wealth = sum(next_dist.*wealth_grid)-(0.5*(1-bankrupcy_costs_fraction))
     if excess_wealth > 0
         R_max=R;
     else
@@ -60,7 +60,7 @@ for i=1:10   %binary search for R
     end
     R = (R_max+R_min)/2;
 end
-initial_dist = next_dist;
+dist_eq = next_dist;
 R_eq = R;
 c_func_eq = c_func_it;
 d_func_eq = d_func_it;
@@ -97,18 +97,18 @@ wealth_dist_all = NaN(wealth_grid_size, time_periods);
 bankrupcy_costs_fraction = NaN(1, time_periods);
 
 R = R_all(1,1); 
-price_shock = 1;  %increase all debts by 10%
+price_shock = 2000;  %increase all debts by 10%
 [transition_matrix_global_shock, wealth_loss] = wealth_transition_global_shock(c_func_eq, d_func_eq, m_grid_eq, R, wealth_grid, lambda, price_shock, bankrupcy_costs_fraction_eq);
-next_dist = transition_matrix_global_shock*initial_dist;
+next_dist = transition_matrix_global_shock*dist_eq;
 wealth_dist_all(:,1) = next_dist;
-bankrupcy_costs_fraction(1) = sum(next_dist.*wealth_loss)/0.5;
+bankrupcy_costs_fraction(1) = sum(dist_eq.*wealth_loss)/0.5;
 
 for t=2:time_periods
     R = R_all(t,1); 
     [transition_matrix, wealth_loss] = wealth_transition(c_function_transition(:,t), d_function_transition(:,t), m_grid_transition(:,t), R, wealth_grid, lambda);
     next_dist = transition_matrix*next_dist;
     wealth_dist_all(:,t) = next_dist;
-    bankrupcy_costs_fraction(t) = sum(next_dist.*wealth_loss)/0.5;
+    bankrupcy_costs_fraction(t) = sum(wealth_dist_all(:,t-1).*wealth_loss)/0.5;
 end
 
 excess_wealth = sum(wealth_dist_all.*(wealth_grid*ones(1,time_periods)))-(0.5*(1-bankrupcy_costs_fraction));

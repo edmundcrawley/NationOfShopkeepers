@@ -22,7 +22,7 @@ consumption = interp1(m_grid, c_function, wealth_grid,'linear','extrap');
 debt = interp1(m_grid, d_function, wealth_grid,'linear','extrap');
 savings = wealth_grid - consumption + debt;
 
-income_grid_size = 10;
+income_grid_size = 100;
 wealth_grid_size = length(wealth_grid);
 transition_matrix_global_shock = zeros(wealth_grid_size, wealth_grid_size);
 wealth_loss = zeros(wealth_grid_size, 1);
@@ -32,8 +32,9 @@ savings_shocked = savings/price_shock;
 %Note under a global shock, R is not risk free. Here bankruptcy costs will
 %increase by the same percentage as the real debt increases (as we are
 %assuming a uniform distribution)
-R_shocked = R*(1-bankrupcy_costs_fraction_eq/price_shock)/(1-bankrupcy_costs_fraction_eq);
-
+R_no_default_cost = R/(1-bankrupcy_costs_fraction_eq);
+R_shocked = R_no_default_cost*(1-bankrupcy_costs_fraction_eq/price_shock^2);
+%R_shocked = R*0.96;
 for i=1:wealth_grid_size
     risky_rate = risky_rate_func(R, lambda, debt(i));
     [income_grid, income_grid_weights] = income_grid_func(income_grid_size, debt_shocked(i), risky_rate);
@@ -51,5 +52,5 @@ for i=1:wealth_grid_size
             end
         end
     end
-    wealth_loss(i) = sum(max(debt_shocked(i)*risky_rate-income_grid,0))*(1-lambda);
+    wealth_loss(i) = income_grid(1)*income_grid_weights(1)*(1-lambda);  %On default costs are 1-lambda of income
 end
