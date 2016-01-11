@@ -1,4 +1,4 @@
-function [ transition_matrix_global_shock ] = wealth_transition_global_shock(c_function, d_function, m_grid, R, wealth_grid, lambda, price_shock)
+function [ transition_matrix_global_shock, wealth_loss ] = wealth_transition_global_shock(c_function, d_function, m_grid, R, wealth_grid, lambda, price_shock, bankrupcy_costs_fraction_eq)
 %wealth_transition_global_shock creates the transition matrix to iterate the distribution of wealth forward
 %one period given consumption and borrowing funtions AND given a global
 %shock to prices with debt and savings set in nominal terms
@@ -12,9 +12,12 @@ function [ transition_matrix_global_shock ] = wealth_transition_global_shock(c_f
 %    lambda - recovery rate on default
 %    price_shock - Multiplicative factor for prices (1.1 => 10% increase in
 %    prices)
+%    bankrupcy_costs_fraction_eq - equilibrium costs of bankrutcy
 % Outputs:
 %    transition_matrix_global_shock - iterates a distribution for wealth defined on
 %    wealth_grid forward one unit of time, given the price_shock
+%    wealth_loss - the amount of income lost to default at each point on
+%    wealth_grid
 consumption = interp1(m_grid, c_function, wealth_grid,'linear','extrap');
 debt = interp1(m_grid, d_function, wealth_grid,'linear','extrap');
 savings = wealth_grid - consumption + debt;
@@ -22,16 +25,19 @@ savings = wealth_grid - consumption + debt;
 income_grid_size = 10;
 wealth_grid_size = length(wealth_grid);
 transition_matrix_global_shock = zeros(wealth_grid_size, wealth_grid_size);
+wealth_loss = zeros(wealth_grid_size, 1);
 
 debt_shocked = debt/price_shock;
-% ***********Note - more/less defaults will mean 'savings' are no longer
-% risk free. This number should account for that eventually.
 savings_shocked = savings/price_shock;
+%Note under a global shock, R is not risk free. Here bankruptcy costs will
+%increase by the same percentage as the real debt increases (as we are
+%assuming a uniform distribution)
+R_shocked = R*(1-bankrupcy_costs_fraction_eq/price_shock)/(1-bankrupcy_costs_fraction_eq);
 
 for i=1:wealth_grid_size
     risky_rate = risky_rate_func(R, lambda, debt(i));
     [income_grid, income_grid_weights] = income_grid_func(income_grid_size, debt_shocked(i), risky_rate);
-    wealth_next = savings_shocked(i)*R + max(income_grid - debt_shocked(i)*risky_rate, 0);
+    wealth_next = savings_shocked(i)*R_shocked + max(income_grid - debt_shocked(i)*risky_rate, 0);
     for j=1:wealth_grid_size-1
         for k=1:income_grid_size
             if wealth_grid(j)<=wealth_next(k) && wealth_next(k)<wealth_grid(j+1)
@@ -45,4 +51,5 @@ for i=1:wealth_grid_size
             end
         end
     end
+    wealth_loss(i) = sum(max(debt_shocked(i)*risky_rate-income_grid,0))*(1-lambda);
 end
