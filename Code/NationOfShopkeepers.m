@@ -35,8 +35,8 @@ initial_dist = next_dist;
 
 %% Find equilibrium interest rate
 time_periods = 10;  %convergence might be faster if we start closer to the solution
-R_max = 0.935;
-R_min = 0.93;
+R_max = 0.93;
+R_min = 0.88;
 R = (R_max+R_min)/2;
 
 for i=1:10   %binary search for R
@@ -45,12 +45,12 @@ for i=1:10   %binary search for R
     for j = 1:10    %first find the policy functions
         [c_func_it, d_func_it, a_func_it, m_grid_it] = iterate_policy(R, beta, gamma, lambda, m_grid_it, c_func_it, a_grid);
     end
-    transition_matrix = wealth_transition(c_func_it, d_func_it, m_grid_it, R, wealth_grid, lambda);
+    [transition_matrix, wealth_loss] = wealth_transition(c_func_it, d_func_it, m_grid_it, R, wealth_grid, lambda);
     next_dist = initial_dist;
     for i=1:25
         next_dist = transition_matrix*next_dist;
     end
-    excess_wealth = sum(next_dist.*wealth_grid)-0.5;
+    excess_wealth = sum(next_dist.*wealth_grid)-(0.5-sum(next_dist.*wealth_loss));
     if excess_wealth > 0
         R_max=R;
     else
