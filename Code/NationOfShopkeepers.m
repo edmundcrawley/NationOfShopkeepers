@@ -65,11 +65,11 @@ d_func_eq = d_func_it;
 a_func_eq = a_func_it;
 m_grid_eq = m_grid_it;
 %% Find equilibrium interest rate in transition after productivity shock
-time_periods = 8;
-R_add = [100, 50, 25, 12, 6, 3, 1, 0]';
+time_periods = 20;
+%R_add = [0, 100, 50, 25, 12, 6, 3, 1, 0, 0]';
 R_all = R_eq*ones(time_periods, 1);
 %R_all = R_all - R_add*0.01/100;
-R_all(1) = R_all(1)-0.1;
+%R_all(2) = R_all(2)-0.036;
 
 m_grid_transition = NaN(a_grid_size+1, time_periods);    
 c_function_transition = NaN(a_grid_size+1, time_periods);    
@@ -91,13 +91,19 @@ for t = [time_periods-1:-1:1]
     m_grid_transition(:,t) = m_grid_it;
 end
 wealth_dist_all = NaN(wealth_grid_size, time_periods);
-next_dist = initial_dist;
-for t=1:time_periods
+
+R = R_all(1,1); 
+price_shock = 0.9;  %increase all debts by 10%
+transition_matrix_global_shock = wealth_transition_global_shock(c_func_eq, d_func_eq, m_grid_eq, R, wealth_grid, lambda, price_shock);
+next_dist = transition_matrix_global_shock*initial_dist;
+wealth_dist_all(:,1) = next_dist;
+
+for t=2:time_periods
     R = R_all(t,1); 
     transition_matrix = wealth_transition(c_function_transition(:,t), d_function_transition(:,t), m_grid_transition(:,t), R, wealth_grid, lambda);
     next_dist = transition_matrix*next_dist;
     wealth_dist_all(:,t) = next_dist;
 end
 
-
+excess_wealth = sum(wealth_dist_all.*(wealth_grid*ones(1,time_periods)))-0.5;
 
