@@ -1,5 +1,7 @@
-# Compiled Object files
+# Ignore these file types
 *.pdf
 *.asv
 *.gif
 *.jpg
+*.docx
+*.doc
