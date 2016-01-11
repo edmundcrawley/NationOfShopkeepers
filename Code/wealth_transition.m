@@ -1,6 +1,18 @@
 function [ transition_matrix ] = wealth_transition(c_function, d_function, m_grid, R, wealth_grid, lambda)
 %iterate_wealth_distribution iterates the distribution of wealth forward
 %one period given consumption and borrowing funtions.
+% Inputs:
+%    c_function - consuption function
+%    d_funcion - debt function
+%    m_grid - cash-on-hand grid relating to the points of c_function and
+%    d_function
+%    R - risk free interest rate
+%    wealth_grid - discretized grid of wealth
+%    lambda - recovery rate on default
+% Outputs:
+%    transition_matrix - iterates a distribution for wealth defined on
+%    wealth_grid forward one unit of time, assuming agents follow the input
+%    policy functions
 consumption = interp1(m_grid, c_function, wealth_grid,'linear','extrap');
 debt = interp1(m_grid, d_function, wealth_grid,'linear','extrap');
 savings = wealth_grid - consumption + debt;
